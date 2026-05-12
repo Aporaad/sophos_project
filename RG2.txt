@@ -1,0 +1,332 @@
+
+ena
+conf t
+hostname router-rg2
+
+ntp server 200.200.200.1 prefer
+ntp update-calendar
+ntp source loopback 0
+
+username ali secret ali
+username saba algorithm-type scrypt secret saba
+aaa new-model
+aaa authentication login default local
+ip domain name abc.com
+
+ 
+ interface Loopback0
+ ip address 2.2.2.2 255.255.255.255
+ ip ospf message-digest-key 1 md5 p2x4pp2x4pp2x4p
+ ip ospf authentication message-digest
+
+interface GigabitEthernet1/0
+ ip add 100.0.0.2 255.255.255.252
+ no sh
+ ip ospf message-digest-key 1 md5 p2x4pp2x4pp2x4p
+ ip ospf authentication message-digest
+
+interface g0/0
+ ip add 101.0.0.1 255.255.255.252
+ no sh
+ ip ospf message-digest-key 1 md5 p2x4pp2x4pp2x4p
+ ip ospf authentication message-digest
+ crypto map mapsaba
+
+router ospf  1
+ router-id 2.2.2.4
+ network 101.0.0.0    0.0.0.3 area 0
+ network 100.0.0.0    0.0.0.3 area 0
+ network 2.2.2.2    0.0.0.0 area 0
+
+ exit
+ 
+ 
+
+
+
+access-list 100 permit ip 172.100.0.0 0.0.0.255 172.50.0.0 0.0.0.255
+access-list 100 permit ip 172.100.0.0 0.0.0.255 172.51.0.0 0.0.0.255
+access-list 100 permit ip 172.100.0.0 0.0.0.255 172.52.0.0 0.0.0.255
+access-list 100 permit ip 172.100.0.0 0.0.0.255 172.53.0.0 0.0.0.255
+access-list 100 permit ip 172.100.0.0 0.0.0.255 172.54.0.0 0.0.0.255
+access-list 100 permit ip 172.100.0.0 0.0.0.255 172.55.0.0 0.0.0.255
+
+
+access-list 100 permit ip 172.101.0.0 0.0.0.255 172.50.0.0 0.0.0.255
+access-list 100 permit ip 172.101.0.0 0.0.0.255 172.51.0.0 0.0.0.255
+access-list 100 permit ip 172.101.0.0 0.0.0.255 172.52.0.0 0.0.0.255
+access-list 100 permit ip 172.101.0.0 0.0.0.255 172.53.0.0 0.0.0.255
+access-list 100 permit ip 172.101.0.0 0.0.0.255 172.54.0.0 0.0.0.255
+access-list 100 permit ip 172.101.0.0 0.0.0.255 172.55.0.0 0.0.0.255
+
+access-list 100 permit ip 172.102.0.0 0.0.0.255 172.50.0.0 0.0.0.255
+access-list 100 permit ip 172.102.0.0 0.0.0.255 172.51.0.0 0.0.0.255
+access-list 100 permit ip 172.102.0.0 0.0.0.255 172.52.0.0 0.0.0.255
+access-list 100 permit ip 172.102.0.0 0.0.0.255 172.53.0.0 0.0.0.255
+access-list 100 permit ip 172.102.0.0 0.0.0.255 172.54.0.0 0.0.0.255
+access-list 100 permit ip 172.102.0.0 0.0.0.255 172.55.0.0 0.0.0.255
+
+access-list 100 permit ip 172.103.0.0 0.0.0.255 172.50.0.0 0.0.0.255
+access-list 100 permit ip 172.103.0.0 0.0.0.255 172.51.0.0 0.0.0.255
+access-list 100 permit ip 172.103.0.0 0.0.0.255 172.52.0.0 0.0.0.255
+access-list 100 permit ip 172.103.0.0 0.0.0.255 172.53.0.0 0.0.0.255
+access-list 100 permit ip 172.103.0.0 0.0.0.255 172.54.0.0 0.0.0.255
+access-list 100 permit ip 172.103.0.0 0.0.0.255 172.55.0.0 0.0.0.255
+
+crypto isakmp policy 10
+ encr aes 256
+ authentication pre-share
+ group 19
+ lifetime 80000
+ crypto isakmp key p2x4pp2x4pp2x4pD9R6Y**$$##p2x4pp2x4pp2x4pD9R6Y address 64.0.0.2
+ 
+
+crypto ipsec transform-set vpnrg  esp-gcm
+
+
+crypto map maprg 10 ipsec-isakmp
+ set peer 64.0.0.2
+ set transform-set vpnrg
+ match address 100
+
+
+ int g1/0
+ crypto map maprg
+ exit
+
+
+ end 
+ wr
+
+DO WR
+
+
+DO WR
+
+
+
+==================
+==========
+=========
+========
+
+ena
+conf t
+hostname sw-dis2-2
+username ali secret ali
+username saba algorithm-type scrypt secret saba
+aaa new-model
+aaa authentication login default local
+ip domain name abc.com
+
+
+ntp server 200.200.200.1 prefer
+ntp update-calendar
+ntp source loopback 0
+spanning-tree mode mst
+
+key chain az
+ key 1
+ key-string p2x4pp2x4pp2x4p
+ cryptographic-algorithm md5
+
+vlan 100
+name it
+vlan 101                         
+name hr  
+vlan 102                     
+name sales 
+vlan 103                   
+name mark 
+
+key chain az
+ key 1
+ key-string p2x4pp2x4pp2x4p
+ cryptographic-algorithm md5
+
+ interface Loopback0
+ ip address 2.2.2.1 255.255.255.255
+ ip ospf authentication key-chain az
+ no sh
+
+interface Port-channel1
+ switchport trunk allowed vlan 50,51,52,53,54,55,56,80,81,82,83,90,91,92,93,100,101,102,103
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+
+ int range g3/0,g3/1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+ channel-group 1 mode desirable
+ switchport trunk allowed vlan 50,51,52,53,54,55,56,80,81,82,83,90,91,92,93,100,101,102,103
+
+interface g1/0
+ no switchport
+ ip address 102.0.0.2 255.255.255.252
+ ip ospf authentication key-chain az
+ duplex auto
+ no sh
+
+ 
+
+interface vlan 100
+ ip address 172.100.0.253 255.255.255.0
+ no sh
+ vrrp 80 ip 172.100.0.254
+ vrrp 80 priority 150
+ vrrp 80 authentication text p2x4pp2x4pp2x4p/*
+ vrrp 80 preempt
+ ip helper-address 200.200.200.1
+ ip helper-address 200.200.200.8
+
+interface vlan 101
+ ip address 172.101.0.253 255.255.255.0
+ no sh
+ vrrp 81 ip 172.101.0.254
+ vrrp 81 priority 150
+ vrrp 81 authentication text p2x4pp2x4pp2x4p/*
+ vrrp 81 preempt
+ ip helper-address 200.200.200.1
+ ip helper-address 200.200.200.8
+
+interface vlan 102
+ ip address 172.102.0.253 255.255.255.0
+ no sh 
+ vrrp 82 ip 172.102.0.254
+ vrrp 82 priority 150
+ vrrp 82 authentication text p2x4pp2x4pp2x4p/*
+ vrrp 82 preempt
+ ip helper-address 200.200.200.1
+ ip helper-address 200.200.200.8
+
+interface vlan 103
+ ip address 172.103.0.253 255.255.255.0
+ no sh
+ vrrp 83 ip 172.103.0.254
+ vrrp 83 priority 150
+ vrrp 83 authentication text p2x4pp2x4pp2x4p/*
+ vrrp 83 preempt
+ ip helper-address 200.200.200.1
+ ip helper-address 200.200.200.8
+
+
+router ospf 1
+ router-id 220.220.220.22
+ passive-interface g3/0
+ passive-interface g3/1
+ passive-interface vlan 100
+ passive-interface vlan 101
+ passive-interface vlan 102
+ passive-interface vlan 103
+ network 102.0.0.0   0.0.0.3 area 0
+ network 172.100.0.0 0.0.0.255 area 0
+ network 172.101.0.0 0.0.0.255 area 0
+ network 172.102.0.0 0.0.0.255 area 0
+ network 172.103.0.0 0.0.0.255 area 0
+ network 2.2.2.1 0.0.0.0 area 0
+ do wr
+
+
+
+
+
+
+==========
+==========
+==========
+
+
+ena
+conf t
+hostname  sw-a2-2
+
+spanning-tree mode mst
+ntp server 200.200.200.1 prefer
+ntp server 200.200.200.8 prefer
+ntp update-calendar
+ntp source loopback 0
+
+
+
+vlan 100
+name it
+vlan 101                        
+name hr  
+vlan 102                     
+name sales 
+vlan 103                       
+name mark 
+
+
+
+
+interface Loopback0
+ ip address 2.2.2.3 255.255.255.255
+
+interface Port-channel1
+ switchport trunk allowed vlan 50,51,52,53,54,55,56,80,81,82,83,90,91,92,93,100,101,102,103
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+
+ int range g3/0,g3/1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+ channel-group 1 mode desirable
+ switchport trunk allowed vlan 50,51,52,53,54,55,56,80,81,82,83,90,91,92,93,100,101,102,103
+
+
+interface vlan 100
+ ip address 172.100.0.250 255.255.255.0
+  no sh
+
+interface vlan 101
+ ip address 172.101.0.250 255.255.255.0
+  no sh
+
+interface vlan 102
+ ip address 172.102.0.250 255.255.255.0
+  no sh
+
+interface vlan 103
+ ip address 172.103.0.250 255.255.255.0
+  no sh
+
+
+interface g2/0
+ switchport mode access
+ switchport access vlan 100
+
+interface g2/1
+ switchport mode access
+ switchport access vlan 101
+
+interface g2/2
+ switchport mode access
+ switchport access vlan 102
+
+interface g2/3
+ switchport mode access
+ switchport access vlan 103
+
+
+
+ip route 0.0.0.0 0.0.0.0 172.100.0.254
+ip route 0.0.0.0 0.0.0.0 172.101.0.254
+ip route 0.0.0.0 0.0.0.0 172.102.0.254
+ip route 0.0.0.0 0.0.0.0 172.103.0.254
+
+ do wr 
+
+
+==========
+==========
+==========
+
+
+
+
+

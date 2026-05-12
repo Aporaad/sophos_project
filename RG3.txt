@@ -1,0 +1,312 @@
+
+ena
+conf t
+hostname router-rg3
+
+ntp server 200.200.200.1 prefer
+ntp update-calendar
+ntp source loopback 0
+
+username ali secret ali
+username saba algorithm-type scrypt secret saba
+aaa new-model
+aaa authentication login default local
+ip domain name abc.com
+
+ 
+ interface Loopback0
+ ip address 3.3.3.3 255.255.255.255
+ ip ospf message-digest-key 1 md5 p2x4pp2x4pp2x4p
+ ip ospf authentication message-digest
+
+interface GigabitEthernet1/0
+ ip add 90.0.0.1 255.255.255.252
+ no sh
+ ip ospf message-digest-key 1 md5 p2x4pp2x4pp2x4p
+ ip ospf authentication message-digest
+
+interface g0/0
+ ip add 91.0.0.1 255.255.255.252
+ no sh
+ ip ospf message-digest-key 1 md5 p2x4pp2x4pp2x4p
+ ip ospf authentication message-digest
+ 
+
+router ospf  1
+ router-id 3.3.3.4
+ network 91.0.0.0    0.0.0.3 area 0
+ network 90.0.0.0    0.0.0.3 area 0
+ network 3.3.3.3    0.0.0.0 area 0
+
+ exit
+ 
+ 
+
+
+
+access-list 100 permit ip 0.0.0.0 0.0.0.255 172.50.0.0 0.0.0.255
+access-list 100 permit ip 0.0.0.0 0.0.0.255 172.51.0.0 0.0.0.255
+access-list 100 permit ip 0.0.0.0 0.0.0.255 172.52.0.0 0.0.0.255
+access-list 100 permit ip 0.0.0.0 0.0.0.255 172.53.0.0 0.0.0.255
+access-list 100 permit ip 0.0.0.0 0.0.0.255 172.54.0.0 0.0.0.255
+access-list 100 permit ip 0.0.0.0 0.0.0.255 172.55.0.0 0.0.0.255
+
+
+
+crypto isakmp policy 10
+ encr aes 256
+ authentication pre-share
+ group 19
+ lifetime 80000
+ crypto isakmp key p2x4pp2x4pp2x4pD9R6Y**$$##p2x4pp2x4pp2x4pD9R6Y address 64.0.0.2
+ 
+
+crypto ipsec transform-set vpnrg  esp-gcm
+
+
+crypto map maprg 10 ipsec-isakmp
+ set peer 64.0.0.2
+ set transform-set vpnrg
+ match address 100
+
+
+ int g1/0
+ crypto map maprg
+ exit
+
+
+ end 
+ wr
+
+DO WR
+
+
+DO WR
+
+
+
+==================
+==========
+=========
+========
+
+ena
+conf t
+hostname sw-dis3-3
+username ali secret ali
+username saba algorithm-type scrypt secret saba
+aaa new-model
+aaa authentication login default local
+ip domain name abc.com
+
+
+ntp server 200.200.200.1 prefer
+ntp update-calendar
+ntp source loopback 0
+spanning-tree mode mst
+
+key chain az
+ key 1
+ key-string p2x4pp2x4pp2x4p
+ cryptographic-algorithm md5
+
+vlan 90
+name it
+vlan 91                         
+name hr  
+vlan 92                     
+name sales 
+vlan 93                   
+name mark 
+
+key chain az
+ key 1
+ key-string p2x4pp2x4pp2x4p
+ cryptographic-algorithm md5
+
+ interface Loopback0
+ ip address 3.3.3.1 255.255.255.255
+ ip ospf authentication key-chain az
+ no sh
+
+interface Port-channel1
+ switchport trunk allowed vlan 50,51,52,53,54,55,56,80,81,82,83,90,91,92,93,100,101,102,103
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+
+ int range g3/0,g3/1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+ channel-group 1 mode desirable
+ switchport trunk allowed vlan 50,51,52,53,54,55,56,80,81,82,83,90,91,92,93,100,101,102,103
+
+interface g1/0
+ no switchport
+ ip address 92.0.0.2 255.255.255.252
+ ip ospf authentication key-chain az
+ duplex auto
+ no sh
+
+ 
+
+interface vlan90
+ ip address 172.90.0.253 255.255.255.0
+ no sh
+ vrrp 80 ip 172.90.0.254
+ vrrp 80 priority 150
+ vrrp 80 authentication text p2x4pp2x4pp2x4p/*
+ vrrp 80 preempt
+ ip helper-address 200.200.200.1
+ ip helper-address 200.200.200.8
+
+interface Vlan91
+ ip address 172.91.0.253 255.255.255.0
+ no sh
+ vrrp 81 ip 172.91.0.254
+ vrrp 81 priority 150
+ vrrp 81 authentication text p2x4pp2x4pp2x4p/*
+ vrrp 81 preempt
+ ip helper-address 200.200.200.1
+ ip helper-address 200.200.200.8
+
+interface Vlan92
+ ip address 172.92.0.253 255.255.255.0
+ no sh 
+ vrrp 82 ip 172.92.0.254
+ vrrp 82 priority 150
+ vrrp 82 authentication text p2x4pp2x4pp2x4p/*
+ vrrp 82 preempt
+ ip helper-address 200.200.200.1
+ ip helper-address 200.200.200.8
+
+interface Vlan93
+ ip address 172.93.0.253 255.255.255.0
+ no sh
+ vrrp 83 ip 172.93.0.254
+ vrrp 83 priority 150
+ vrrp 83 authentication text p2x4pp2x4pp2x4p/*
+ vrrp 83 preempt
+ ip helper-address 200.200.200.1
+ ip helper-address 200.200.200.8
+
+
+router ospf 1
+ router-id 220.220.220.22
+ passive-interface g3/0
+ passive-interface g3/1
+ passive-interface vlan90
+ passive-interface Vlan91
+ passive-interface Vlan92
+ passive-interface Vlan93
+ network 92.0.0.0   0.0.0.3 area 0
+ network 172.90.0.0 0.0.0.255 area 0
+ network 172.91.0.0 0.0.0.255 area 0
+ network 172.92.0.0 0.0.0.255 area 0
+ network 172.93.0.0 0.0.0.255 area 0
+ network 3.3.3.1 0.0.0.0 area 0
+ do wr
+
+
+
+
+
+
+==========
+==========
+==========
+
+
+ena
+conf t
+hostname  sw-a3-3
+
+spanning-tree mode mst
+ntp server 200.200.200.1 prefer
+ntp server 200.200.200.8 prefer
+ntp update-calendar
+ntp source loopback 0
+
+
+
+vlan 90
+name it
+vlan 91                        
+name hr  
+vlan 92                     
+name sales 
+vlan 93                       
+name mark 
+
+
+
+
+interface Loopback0
+ ip address 3.3.3.2 255.255.255.255
+
+interface Port-channel1
+ switchport trunk allowed vlan 50,51,52,53,54,55,56,80,81,82,83,90,91,92,93,100,101,102,103
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+
+ int range g3/0,g3/1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+ channel-group 1 mode desirable
+ switchport trunk allowed vlan 50,51,52,53,54,55,56,80,81,82,83,90,91,92,93,100,101,102,103
+
+
+interface vlan90
+ ip address 172.90.0.250 255.255.255.0
+  no sh
+
+interface vlan91
+ ip address 172.91.0.250 255.255.255.0
+  no sh
+
+interface vlan92
+ ip address 172.92.0.250 255.255.255.0
+  no sh
+
+interface vlan93
+ ip address 172.93.0.250 255.255.255.0
+  no sh
+
+
+interface g2/0
+ switchport mode access
+ switchport access vlan 90
+
+interface g2/1
+ switchport mode access
+ switchport access vlan 91
+
+interface g2/2
+ switchport mode access
+ switchport access vlan 92
+
+interface g2/3
+ switchport mode access
+ switchport access vlan 93
+
+
+
+ip route 0.0.0.0 0.0.0.0 172.90.0.254
+ip route 0.0.0.0 0.0.0.0 172.91.0.254
+ip route 0.0.0.0 0.0.0.0 172.92.0.254
+ip route 0.0.0.0 0.0.0.0 172.93.0.254
+
+ do wr 
+
+
+==========
+==========
+==========
+
+
+
+
+
